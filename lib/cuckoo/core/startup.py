@@ -301,7 +301,8 @@ def cuckoo_clean():
     # Paths to clean.
     paths = [
         os.path.join(CUCKOO_ROOT, "db"),
-        os.path.join(CUCKOO_ROOT, "log"),
+    #    os.path.join(CUCKOO_ROOT, "log"),
+        os.path.join(CUCKOO_ROOT, "/var/log/cuckoo"),
         os.path.join(CUCKOO_ROOT, "storage"),
     ]
 
