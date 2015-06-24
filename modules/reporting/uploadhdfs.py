@@ -3,7 +3,7 @@ import os
 from lib.cuckoo.common.exceptions import CuckooReportError
 from lib.cuckoo.common.abstracts import Report
 
-class HdfsUpload(Report):
+class UploadHdfs(Report):
     """Saves analysis results in HDFS node when the proccess has been finished"""
 
     def run(self, results):
