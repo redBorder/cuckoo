@@ -67,6 +67,7 @@ def main():
     parser.add_argument("--interface", type=str, help="Sniffer interface for this machine.")
     parser.add_argument("--snapshot", type=str, help="Specific Virtual Machine Snapshot to use.")
     parser.add_argument("--resultserver", type=str, help="IP:Port of the Result Server.")
+    parser.add_argument("--label", type=str, help="Label of the Virtual Machine")
     args = parser.parse_args()
 
     logging.basicConfig()
@@ -88,7 +89,7 @@ def main():
         if db.view_machine(args.vmname):
             sys.exit("A Virtual Machine with this name already exists!")
 
-        db.add_machine(args.vmname, args.vmname, args.ip, args.platform,
+        db.add_machine(args.vmname, args.label, args.vmname, args.ip, args.platform,
                        args.tags, args.interface, args.snapshot,
                        resultserver_ip, int(resultserver_port))
         db.unlock_machine(args.vmname)
