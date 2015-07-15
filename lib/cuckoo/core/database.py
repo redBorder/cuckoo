@@ -498,6 +498,10 @@ class Database(object):
         session = self.Session()
         try:
             row = session.query(Task).get(task_id)
+            
+            if not row:
+                return
+            
             row.status = status
 
             if status == TASK_RUNNING:
@@ -521,7 +525,7 @@ class Database(object):
         row = None
         try:
             if machine != "":
-                row = session.query(Task).filter_by(status=TASK_PENDING).filter(Machine.name==machine).order_by(Task.priority.desc(), Task.added_on.asc()).first()
+                row = session.query(Task).filter_by(status=TASK_PENDING).filter(Machine.name == machine).order_by(Task.priority.desc(), Task.added_on.asc()).first()
             else:
                 row = session.query(Task).filter_by(status=TASK_PENDING).order_by(Task.priority.desc(), Task.added_on.asc()).first()
 
@@ -725,7 +729,7 @@ class Database(object):
             return machines
         except SQLAlchemyError as e:
             log.debug("Database error getting available machines: {0}".format(e))
-            return 0
+            return []
         finally:
             session.close()
 

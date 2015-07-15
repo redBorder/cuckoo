@@ -81,7 +81,7 @@ if [ ! -e "/usr/bin/VirtualBox" ]; then
     # Update our apt repository with "contrib".
     DEBVERSION="$(lsb_release -cs)"
     echo "deb http://download.virtualbox.org/virtualbox/debian " \
-        "$DEBVERSION contrib" >> /etc/apt/sources.list
+        "$DEBVERSION contrib" >> /etc/apt/sources.list.d/virtualbox.list
 
     # Add the VirtualBox public key to our apt repository.
     wget -q https://www.virtualbox.org/download/oracle_vbox.asc \
@@ -154,7 +154,6 @@ vm-dir = $VMS
 data-dir = $VMS
 iso-mount = $MOUNT
 serial-key = $SERIALKEY
-dependencies = dotnet40 acrobat9
 temp-dirpath = $VMTEMP
 EOF
 
@@ -164,7 +163,7 @@ chown cuckoo:cuckoo "$VMCLOAKCONF"
 sudo -u cuckoo -i vmcloak-bird hddpath bird0
 if [ "$?" -ne 0 ]; then
     echo "Creating the Virtual Machine bird.."
-    vmcloak -u cuckoo -s "$VMCLOAKCONF" --bird bird0 --winxp
+    vmcloak -u cuckoo -s "$VMCLOAKCONF" -r --bird bird0 --winxp
 fi
 
 # Kill all VirtualBox processes as otherwise the listening
