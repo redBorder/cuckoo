@@ -7,12 +7,45 @@ import argparse
 import logging
 import os.path
 import sys
+import fileinput
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
 from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.core.database import Database
+
+def delete_conf(machinery, args):
+    """Delete a machine from the relevant configuration file"""
+    path = os.path.join(CUCKOO_ROOT, "conf", "%s.conf" % machinery)
+   
+    flag = False
+    count=0
+    lines = []
+    file = open(path, "rb")
+    for line in file:
+        line = line.strip()
+        if line.split("=")[0].strip() == "machines":
+            current_machines = []
+	    machines = line.split("=", 1)[1].strip().replace(" ","").split(",")
+     	    line = "machines ="
+            for elem in machines:
+		if elem != args.vmname:
+		    current_machines.append(elem)
+		    if line.split("=", 1)[1].strip():
+		        line += ", %s" % current_machines[-1]
+		    else:
+			line += " %s" % current_machines[-1]
+	if "[%s]" % args.vmname in line:
+	    flag = True
+            continue
+        if count < 5 and flag == True:
+            count = count + 1
+	    continue
+	lines.append(line)        
+
+    open(path, "wb").write("\n".join(lines))
+
 
 def update_conf(machinery, args):
     """Writes the new machine to the relevant configuration file."""
@@ -35,7 +68,7 @@ def update_conf(machinery, args):
     lines += [
         "",
         "[%s]" % args.vmname,
-        "label = %s" % args.vmname,
+        "label = %s" % args.label,
         "platform = %s" % args.platform,
         "ip = %s" % args.ip,
     ]
@@ -61,6 +94,7 @@ def main():
     parser.add_argument("vmname", type=str, help="Name of the Virtual Machine.")
     parser.add_argument("--debug", action="store_true", help="Debug log in case of errors.")
     parser.add_argument("--add", action="store_true", help="Add a Virtual Machine.")
+    parser.add_argument("--delete", action="store_true", help="Delete a Virtual Machine")
     parser.add_argument("--ip", type=str, help="Static IP Address.")
     parser.add_argument("--platform", type=str, default="windows", help="Guest Operating System.")
     parser.add_argument("--tags", type=str, help="Tags for this Virtual Machine.")
@@ -86,15 +120,16 @@ def main():
         resultserver_port = conf.resultserver.port
 
     if args.add:
-        if db.view_machine(args.vmname):
-            sys.exit("A Virtual Machine with this name already exists!")
-
-        db.add_machine(args.vmname, args.label, args.vmname, args.ip, args.platform,
+        db.add_machine(args.vmname, args.label, args.ip, args.platform,
                        args.tags, args.interface, args.snapshot,
                        resultserver_ip, int(resultserver_port))
         db.unlock_machine(args.vmname)
 
         update_conf(conf.cuckoo.machinery, args)
+
+    if args.delete:
+        delete_conf(conf.cuckoo.machinery, args)	
+
 
 if __name__ == "__main__":
     main()
