@@ -15,7 +15,55 @@ from lib.cuckoo.common.config import Config
 from lib.cuckoo.common.constants import CUCKOO_ROOT
 from lib.cuckoo.core.database import Database
 
-def delete_conf(machinery, args):
+def get_conf(machinery, vmname, value):
+    """Get info from a machine"""
+    path = os.path.join(CUCKOO_ROOT, "conf", "%s.conf" % machinery)
+
+    count = 0
+    exist = False
+    flag = False
+    values = []
+
+    file = open(path, "rb")
+    for line in file:
+	 line = line.strip()
+         if line.split("=")[0].strip() == "machines":
+	     machines = line.split("=", 1)[1].strip().replace(" ","").split(",")
+	     for elem in machines:
+		if elem == vmname:
+		    exist = True
+		    break
+	     if exist == False:
+	         print "The machine passed as argument does not exist in cuckoo"
+	         exit(1)
+	 if "[%s]" % vmname in line:
+	    flag = True 
+	    continue
+	 if count < 4 and flag == True:	
+	   v = line.split("=", 1)[1].strip()
+	   values.append(v)
+	   count = count + 1
+ 	   continue
+	 elif count == 4:
+	   break
+
+    if value == "label":
+	print values[0]
+    elif value == "platform":
+	print values[1]
+    elif value == "ip":
+	print values[2]
+    elif value == "interface":
+	print values[3]
+    else:
+	print "Invalid value"
+	exit(1)
+
+    exit(0)
+		 
+    
+
+def delete_conf(machinery, vmname):
     """Delete a machine from the relevant configuration file"""
     path = os.path.join(CUCKOO_ROOT, "conf", "%s.conf" % machinery)
    
@@ -30,13 +78,13 @@ def delete_conf(machinery, args):
 	    machines = line.split("=", 1)[1].strip().replace(" ","").split(",")
      	    line = "machines ="
             for elem in machines:
-		if elem != args.vmname:
+		if elem != vmname:
 		    current_machines.append(elem)
 		    if line.split("=", 1)[1].strip():
 		        line += ", %s" % current_machines[-1]
 		    else:
 			line += " %s" % current_machines[-1]
-	if "[%s]" % args.vmname in line:
+	if "[%s]" % vmname in line:
 	    flag = True
             continue
         if count < 5 and flag == True:
@@ -95,6 +143,7 @@ def main():
     parser.add_argument("--debug", action="store_true", help="Debug log in case of errors.")
     parser.add_argument("--add", action="store_true", help="Add a Virtual Machine.")
     parser.add_argument("--delete", action="store_true", help="Delete a Virtual Machine")
+    parser.add_argument("--get", type=str, help="Get info about a virtual machine")
     parser.add_argument("--ip", type=str, help="Static IP Address.")
     parser.add_argument("--platform", type=str, default="windows", help="Guest Operating System.")
     parser.add_argument("--tags", type=str, help="Tags for this Virtual Machine.")
@@ -128,7 +177,10 @@ def main():
         update_conf(conf.cuckoo.machinery, args)
 
     if args.delete:
-        delete_conf(conf.cuckoo.machinery, args)	
+        delete_conf(conf.cuckoo.machinery, args.vmname)	
+
+    if args.get:
+	get_conf(conf.cuckoo.machinery, args.vmname, args.get)
 
 
 if __name__ == "__main__":
