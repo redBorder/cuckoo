@@ -7,7 +7,6 @@ import argparse
 import logging
 import os.path
 import sys
-import fileinput
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
 
