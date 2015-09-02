@@ -94,7 +94,7 @@ def delete_conf(machinery, vmname):
     open(path, "wb").write("\n".join(lines))
 
 
-def update_conf(machinery, args):
+def update_conf(machinery, args, action=None):
     """Writes the new machine to the relevant configuration file."""
     path = os.path.join(CUCKOO_ROOT, "conf", "%s.conf" % machinery)
 
@@ -103,22 +103,23 @@ def update_conf(machinery, args):
         line = line.strip()
 
         if line.split("=")[0].strip() == "machines":
-            # If there are already one or more labels then append the new
-            # label to the list, otherwise make a new list.
-            if line.split("=", 1)[1].strip():
-                line += ", %s" % args.vmname
-            else:
-                line += " %s" % args.vmname
+             # If there are already one or more labels then append the new
+             # label to the list, otherwise make a new list.
+             if line.split("=", 1)[1].strip():
+                 line += ", %s" % args.vmname
+             else:
+                 line += " %s" % args.vmname
 
         lines.append(line)
 
-    lines += [
-        "",
-        "[%s]" % args.vmname,
-        "label = %s" % args.label,
-        "platform = %s" % args.platform,
-        "ip = %s" % args.ip,
-    ]
+    if action == "add": 
+        lines += [
+            "",
+            "[%s]" % args.vmname,
+            "label = %s" % args.label,
+            "platform = %s" % args.platform,
+            "ip = %s" % args.ip,
+        ]
 
     if args.snapshot:
         lines.append("snapshot = %s" % args.snapshot)
@@ -173,7 +174,11 @@ def main():
                        resultserver_ip, int(resultserver_port))
         db.unlock_machine(args.vmname)
 
-        update_conf(conf.cuckoo.machinery, args)
+        update_conf(conf.cuckoo.machinery, args, action="add")
+
+    if args.delete:
+        # TODO Add a db.del_machine() function for runtime modification.
+        update_conf(conf.cuckoo.machinery, args, action="delete")
 
     if args.delete:
         delete_conf(conf.cuckoo.machinery, args.vmname)	
